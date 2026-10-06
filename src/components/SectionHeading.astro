@@ -1,0 +1,22 @@
+---
+/** Numbered eyebrow + plain title + one-line explanation. Same shape for every section. */
+interface Props {
+  eyebrow: string;
+  title: string;
+  lead?: string;
+  id?: string;
+}
+
+const { eyebrow, title, lead, id } = Astro.props;
+// The accent period is decorative; skip it when the title already ends in punctuation.
+const endsWithMark = /[.?!]$/.test(title);
+---
+
+<header class="mb-8 max-w-[60ch] md:mb-10">
+  <p class="mb-3 font-mono text-[0.8125rem] font-medium tracking-[.08em] text-accent uppercase">{eyebrow}</p>
+  <h2 id={id} class="section-title">
+    {title}{!endsWithMark && <span class="text-accent">.</span>}
+    <slot name="after-title" />
+  </h2>
+  {lead && <p class="mt-3 text-[1.0625rem] text-fg-2 md:text-lg">{lead}</p>}
+</header>

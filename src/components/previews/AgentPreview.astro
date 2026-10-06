@@ -1,0 +1,24 @@
+---
+import { getLang } from '../../i18n/utils';
+
+const copy = {
+  es: {
+    agent: 'agente:',
+    question: '¿quién aprueba un documento nuevo?',
+    answer: 'según el procedimiento de control documental, el líder del proceso.',
+    source: '// fuente: onedrive/SGC/PR-01',
+  },
+  en: {
+    agent: 'agent:',
+    question: 'who approves a new document?',
+    answer: 'per the document control procedure, the process owner.',
+    source: '// source: onedrive/SGC/PR-01',
+  },
+}[getLang(Astro.currentLocale)];
+---
+
+<div class="border-b border-line bg-bg px-5 py-[18px] font-mono text-[0.78125rem] leading-[1.7] text-fg-2" aria-hidden="true">
+  <p><span class="text-accent">&gt;</span> {copy.question}</p>
+  <p><span class="text-blue">{copy.agent}</span> {copy.answer}</p>
+  <p class="text-muted">{copy.source}</p>
+</div>

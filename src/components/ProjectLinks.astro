@@ -1,0 +1,34 @@
+---
+import { getLang, useTranslations } from '../i18n/utils';
+
+interface Props {
+  demoUrl?: string;
+  repoUrl?: string;
+  class?: string;
+}
+
+const { demoUrl, repoUrl, class: className } = Astro.props;
+const t = useTranslations(getLang(Astro.currentLocale));
+const link = 'group inline-flex min-h-11 items-center gap-1';
+const arrow =
+  'inline-block transition-transform duration-150 ease-out group-hover:translate-x-0.5 motion-reduce:transition-none';
+---
+
+{
+  (demoUrl || repoUrl) && (
+    <div class:list={['flex flex-wrap gap-x-5 font-mono text-sm font-medium', className]}>
+      {demoUrl && (
+        <a href={demoUrl} class={link} rel="noopener" target="_blank">
+          {t('projects.demo')}
+          <span class={arrow} aria-hidden="true">→</span>
+        </a>
+      )}
+      {repoUrl && (
+        <a href={repoUrl} class={link} rel="noopener" target="_blank">
+          {t('projects.code')}
+          <span class={arrow} aria-hidden="true">→</span>
+        </a>
+      )}
+    </div>
+  )
+}

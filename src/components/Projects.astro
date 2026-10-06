@@ -1,0 +1,138 @@
+---
+import { getCollection } from 'astro:content';
+import { getLang, useTranslations } from '../i18n/utils';
+import { PROJECT_CATEGORIES } from '../lib/projects';
+import ProjectDetails from './ProjectDetails.astro';
+import ProjectPreview from './ProjectPreview.astro';
+import SectionHeading from './SectionHeading.astro';
+import TerminalWindow from './TerminalWindow.astro';
+
+const lang = getLang(Astro.currentLocale);
+const t = useTranslations(lang);
+
+const projects = (await getCollection('projects', ({ id }) => id.startsWith(`${lang}/`))).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+const featured = projects.find((p) => p.data.featured);
+const rest = projects.filter((p) => p !== featured);
+
+const filters = ['all', ...PROJECT_CATEGORIES] as const;
+// Stable names let the browser morph each card to its new spot when the filter changes.
+const vtName = (id: string) => `view-transition-name: project-${id.split('/').pop()}`;
+---
+
+<section id="proyectos" class="pt-16 md:pt-24" aria-labelledby="proyectos-title" data-projects>
+  <SectionHeading id="proyectos-title" eyebrow={t('projects.eyebrow')} title={t('projects.title')} lead={t('projects.lead')} />
+
+  <div role="group" aria-label={t('projects.filter')} class="-mt-2 mb-6 flex flex-wrap gap-2 md:mb-8">
+    {
+      filters.map((cat) => (
+        <button
+          type="button"
+          data-filter={cat}
+          aria-pressed={cat === 'all' ? 'true' : 'false'}
+          class="pressable min-h-11 cursor-pointer rounded-full border border-line-strong px-4 text-[0.9375rem] text-fg-2 hover:border-accent aria-pressed:border-accent aria-pressed:bg-accent/12 aria-pressed:text-accent"
+        >
+          {t(`projects.cat.${cat}`)}
+        </button>
+      ))
+    }
+  </div>
+
+  {
+    featured && (
+      <TerminalWindow
+        as="article"
+        traffic
+        title={`${featured.data.path} — ${t('projects.featured')}`}
+        class="reveal mb-5"
+        data-tags={featured.data.categories.join(' ')}
+        style={vtName(featured.id)}
+      >
+        <div class="flex flex-wrap">
+          <div class="min-w-0 flex-[1_1_440px] border-line max-md:border-b md:border-r">
+            <ProjectPreview preview={featured.data.preview} />
+          </div>
+          <div class="flex min-w-0 flex-[1_1_440px] flex-col p-5 md:px-8 md:py-7">
+            <ProjectDetails project={featured.data} large />
+          </div>
+        </div>
+      </TerminalWindow>
+    )
+  }
+
+  <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-5">
+    {
+      rest.map(({ id, data }) => (
+        <TerminalWindow
+          as="article"
+          title={data.path}
+          class="reveal flex flex-col"
+          data-tags={data.categories.join(' ')}
+          style={vtName(id)}
+        >
+          <ProjectPreview preview={data.preview} />
+          <div class="flex grow flex-col p-5">
+            <ProjectDetails project={data} />
+          </div>
+        </TerminalWindow>
+      ))
+    }
+
+    <article
+      class="reveal flex flex-col justify-center gap-3.5 rounded-[10px] border border-dashed border-line-strong p-6 md:p-7"
+      style="view-transition-name: project-cta"
+      data-cta
+    >
+      <h3 class="text-xl leading-snug font-semibold md:text-[1.375rem]">{t('projects.ctaTitle')}</h3>
+      <p class="text-[0.9375rem] text-fg-2">{t('projects.ctaText')}</p>
+      <a href="#contacto" class="btn-primary self-start">{t('projects.ctaButton')}</a>
+    </article>
+  </div>
+
+  <p class="mt-5 hidden text-[0.9375rem] text-muted" data-empty role="status">{t('projects.empty')}</p>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-projects]');
+
+  if (root) {
+    const buttons = root.querySelectorAll<HTMLButtonElement>('[data-filter]');
+    const items = root.querySelectorAll<HTMLElement>('[data-tags]');
+    const empty = root.querySelector<HTMLElement>('[data-empty]');
+    const valid = new Set([...buttons].map((b) => b.dataset.filter));
+
+    const apply = (tag: string) => {
+      let visible = 0;
+      for (const button of buttons) button.setAttribute('aria-pressed', String(button.dataset.filter === tag));
+      for (const item of items) {
+        const show = tag === 'all' || (item.dataset.tags ?? '').split(' ').includes(tag);
+        item.hidden = !show;
+        if (show) visible++;
+      }
+      empty?.classList.toggle('hidden', visible > 0);
+    };
+
+    // Keep the filter in the URL (?tag=business) so a filtered view can be shared.
+    const fromUrl = new URL(location.href).searchParams.get('tag');
+    if (fromUrl && valid.has(fromUrl)) apply(fromUrl);
+
+    for (const button of buttons) {
+      button.addEventListener('click', (event) => {
+        const tag = button.dataset.filter ?? 'all';
+        // Animate the reflow for pointer clicks only. Keyboard activation (detail === 0) and
+        // reduced motion get the instant swap.
+        const animate =
+          event.detail > 0 &&
+          'startViewTransition' in document &&
+          !matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (animate) document.startViewTransition(() => apply(tag));
+        else apply(tag);
+        const url = new URL(location.href);
+        if (tag === 'all') url.searchParams.delete('tag');
+        else url.searchParams.set('tag', tag);
+        history.replaceState(null, '', url);
+      });
+    }
+  }
+</script>

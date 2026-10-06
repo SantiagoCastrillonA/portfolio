@@ -1,0 +1,151 @@
+---
+import { profile } from '../data/profile';
+import { languages } from '../i18n/ui';
+import { cvPath, getLang, homePath, otherLang, useTranslations } from '../i18n/utils';
+
+const lang = getLang(Astro.currentLocale);
+const t = useTranslations(lang);
+const alt = otherLang(lang);
+
+const links = [
+  { id: 'servicios', label: t('nav.services') },
+  { id: 'proyectos', label: t('nav.projects') },
+  { id: 'experiencia', label: t('nav.experience') },
+  { id: 'contacto', label: t('nav.contact') },
+];
+---
+
+<header
+  class="sticky top-0 z-40 border-b border-transparent bg-bg/85 backdrop-blur-md transition-colors duration-200 data-[scrolled]:border-line"
+  style="view-transition-name: site-header"
+  data-nav
+>
+  <div class="mx-auto flex max-w-[1200px] items-center justify-between gap-x-6 gap-y-2 py-2 pr-2 pl-4 md:px-7 md:py-3">
+    <a href="#inicio" class="flex min-h-11 flex-col justify-center no-underline md:flex-row md:items-center md:gap-2.5">
+      <span class="font-mono text-sm leading-[1.3] font-bold text-accent md:text-[0.9375rem]">{profile.name}</span>
+      <span class="font-mono text-[0.625rem] leading-[1.3] font-medium tracking-[.12em] text-muted uppercase md:text-[0.6875rem]">
+        {t('brand.role')}
+      </span>
+    </a>
+
+    <button
+      type="button"
+      class="pressable flex size-12 items-center justify-center rounded-md text-fg md:hidden"
+      aria-controls="nav-menu"
+      aria-expanded="false"
+      aria-label={t('nav.open')}
+      data-label-open={t('nav.open')}
+      data-label-close={t('nav.close')}
+      data-nav-toggle
+    >
+      <svg class="icon-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M4 7h16M4 12h16M4 17h16"></path>
+      </svg>
+      <svg class="icon-close hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18"></path>
+      </svg>
+    </button>
+
+    <nav
+      id="nav-menu"
+      aria-label={t('nav.label')}
+      class="invisible absolute inset-x-0 top-full flex origin-top-right -translate-y-2 scale-[.98] flex-col border-b border-line bg-surface px-4 pt-2 pb-4 opacity-0 shadow-[0_24px_48px_-12px_rgb(0_0_0/.6)] transition-[opacity,translate,scale,visibility] duration-150 ease-out data-[instant]:duration-0! data-[open]:visible data-[open]:duration-200 data-[open]:translate-y-0 data-[open]:scale-100 data-[open]:opacity-100 motion-reduce:translate-y-0 motion-reduce:scale-100 md:visible md:static md:translate-y-0 md:scale-100 md:flex-row md:items-center md:gap-x-[22px] md:border-0 md:bg-transparent md:p-0 md:opacity-100 md:shadow-none md:transition-none"
+    >
+      {
+        links.map(({ id, label }) => (
+          <a
+            href={`#${id}`}
+            data-nav-link={id}
+            class="flex min-h-12 items-center border-b border-line text-[1.0625rem] text-fg no-underline aria-[current=true]:text-accent md:min-h-0 md:border-0 md:py-2.5 md:text-[0.9375rem]"
+          >
+            {label}
+          </a>
+        ))
+      }
+      <a
+        href={homePath(alt)}
+        hreflang={alt}
+        lang={alt}
+        aria-label={`${t('nav.lang')}: ${languages[alt]}`}
+        class="flex min-h-12 items-center gap-2 text-[0.9375rem] text-fg-2 no-underline hover:text-accent md:min-h-0 md:py-2.5 md:font-mono md:text-[0.8125rem]"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z"></path>
+        </svg>
+        <span class="md:hidden">{languages[alt]}</span>
+        <span class="hidden md:inline">{alt.toUpperCase()}</span>
+      </a>
+      <a
+        href={cvPath(lang)}
+        download
+        class="mt-3.5 btn-primary md:mt-0 md:min-h-10 md:border md:border-line-strong md:bg-transparent md:px-4 md:font-medium md:text-fg md:hover:border-accent md:hover:bg-transparent md:hover:text-accent"
+      >
+        {t('nav.cv')}
+      </a>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+  const menu = document.getElementById('nav-menu');
+
+  if (toggle && menu) {
+    const setOpen = (open: boolean) => {
+      menu.toggleAttribute('data-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', (open ? toggle.dataset.labelClose : toggle.dataset.labelOpen) ?? '');
+      toggle.querySelector('.icon-open')?.classList.toggle('hidden', open);
+      toggle.querySelector('.icon-close')?.classList.toggle('hidden', !open);
+    };
+
+    // Keyboard-driven toggles (Enter/Space/Escape) skip the animation: they should feel instant.
+    const setOpenInstantly = (open: boolean) => {
+      menu.setAttribute('data-instant', '');
+      setOpen(open);
+      requestAnimationFrame(() => requestAnimationFrame(() => menu.removeAttribute('data-instant')));
+    };
+
+    toggle.addEventListener('click', (event) => {
+      const open = !menu.hasAttribute('data-open');
+      // detail === 0 means the click came from the keyboard, not a pointer.
+      if (event.detail === 0) setOpenInstantly(open);
+      else setOpen(open);
+    });
+    menu.addEventListener('click', (event) => {
+      if ((event.target as Element).closest('a')) setOpen(false);
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && menu.hasAttribute('data-open')) {
+        setOpenInstantly(false);
+        toggle.focus();
+      }
+    });
+  }
+
+  // Scroll edge: the divider under the header only shows once content scrolls beneath it.
+  const header = document.querySelector<HTMLElement>('[data-nav]');
+  const markScrolled = () => header?.toggleAttribute('data-scrolled', window.scrollY > 4);
+  markScrolled();
+  window.addEventListener('scroll', markScrolled, { passive: true });
+
+  // Scroll-spy: mark the link of the section currently in view.
+  const links = document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]');
+  const sections = [...links]
+    .map((link) => document.getElementById(link.dataset.navLink ?? ''))
+    .filter((section): section is HTMLElement => section !== null);
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        for (const link of links) {
+          link.setAttribute('aria-current', String(link.dataset.navLink === entry.target.id));
+        }
+      }
+    },
+    { rootMargin: '-40% 0px -55% 0px' },
+  );
+  for (const section of sections) observer.observe(section);
+</script>

@@ -1,0 +1,25 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import AgentPreview from './previews/AgentPreview.astro';
+import BarsPreview from './previews/BarsPreview.astro';
+import ChatPreview from './previews/ChatPreview.astro';
+import MigratePreview from './previews/MigratePreview.astro';
+import QuizPreview from './previews/QuizPreview.astro';
+
+interface Props {
+  preview: CollectionEntry<'projects'>['data']['preview'];
+}
+
+// Register new previews here after adding them to PROJECT_PREVIEWS in lib/projects.ts.
+const previews = {
+  quiz: QuizPreview,
+  chat: ChatPreview,
+  bars: BarsPreview,
+  agent: AgentPreview,
+  migrate: MigratePreview,
+};
+
+const Preview = previews[Astro.props.preview];
+---
+
+<Preview />

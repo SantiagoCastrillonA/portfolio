@@ -1,0 +1,24 @@
+---
+/**
+ * Window chrome used across the site: three dots + a terminal path.
+ * `traffic` colors the dots like macOS; otherwise they stay muted.
+ */
+interface Props {
+  title: string;
+  traffic?: boolean;
+  class?: string;
+  as?: 'div' | 'article' | 'form';
+  [key: string]: unknown;
+}
+
+const { title, traffic = false, class: className, as: Tag = 'div', ...rest } = Astro.props;
+const dots = traffic ? ['bg-red', 'bg-amber', 'bg-green'] : ['bg-line-strong', 'bg-line-strong', 'bg-line-strong'];
+---
+
+<Tag class:list={['card', className]} {...rest}>
+  <div class="flex items-center gap-[7px] border-b border-line bg-chrome px-3.5 py-[9px]" aria-hidden="true">
+    {dots.map((color) => <span class:list={['size-[9px] rounded-full', color]} />)}
+    <span class="ml-2 truncate font-mono text-xs text-muted">{title}</span>
+  </div>
+  <slot />
+</Tag>

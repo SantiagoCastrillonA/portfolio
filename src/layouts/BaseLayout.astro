@@ -1,0 +1,63 @@
+---
+import '../styles/global.css';
+import { profile } from '../data/profile';
+import { languages } from '../i18n/ui';
+import { getLang, homePath, useTranslations } from '../i18n/utils';
+
+const lang = getLang(Astro.currentLocale);
+const t = useTranslations(lang);
+const site = Astro.site ?? Astro.url;
+const canonical = new URL(Astro.url.pathname, site);
+const ogImage = new URL('/og.png', site);
+const ogLocale = lang === 'es' ? 'es_CO' : 'en_US';
+
+const personLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: profile.fullName,
+  jobTitle: 'Full-Stack Developer',
+  email: `mailto:${profile.email}`,
+  url: new URL(homePath(lang), site).href,
+  address: { '@type': 'PostalAddress', addressRegion: profile.location.locality, addressCountry: profile.location.country },
+  sameAs: [profile.github.url, profile.linkedin.url],
+  knowsAbout: ['Laravel', 'PHP', 'JavaScript', 'TypeScript', 'React', 'Node.js', 'WebSockets', 'AWS'],
+};
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{t('meta.title')}</title>
+    <meta name="description" content={t('meta.description')} />
+    <meta name="theme-color" content="#0b0f14" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href={canonical} />
+    {
+      Object.keys(languages).map((l) => (
+        <link rel="alternate" hreflang={l} href={new URL(homePath(l as keyof typeof languages), site)} />
+      ))
+    }
+    <link rel="alternate" hreflang="x-default" href={new URL('/', site)} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={t('meta.title')} />
+    <meta property="og:description" content={t('meta.description')} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content={ogLocale} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(personLd)} />
+  </head>
+  <body>
+    <a
+      href="#main"
+      class="sr-only z-50 rounded-md bg-accent px-4 py-2 font-mono text-sm font-bold text-bg focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+      >{t('skip')}</a
+    >
+    <slot />
+  </body>
+</html>

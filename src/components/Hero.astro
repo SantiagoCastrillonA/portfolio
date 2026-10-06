@@ -1,0 +1,40 @@
+---
+import { getLang, useTranslations } from '../i18n/utils';
+import Particles from './Particles.astro';
+
+const lang = getLang(Astro.currentLocale);
+const t = useTranslations(lang);
+---
+
+<section id="inicio" class="flex flex-col gap-8 pt-10 pb-6 md:flex-row md:flex-wrap md:items-center md:pt-20 md:pb-14">
+  <div class="min-w-0 md:flex-[999_1_580px]">
+    <p class="mb-6 inline-flex items-center gap-2 rounded-full border border-line-strong px-3 py-1 text-[0.8125rem] text-fg-2 md:mb-8">
+      <span class="relative flex size-2" aria-hidden="true">
+        <span class="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-60 motion-reduce:animate-none"></span>
+        <span class="relative inline-flex size-2 rounded-full bg-accent"></span>
+      </span>
+      {t('hero.available')}
+    </p>
+    <h1 class="font-mono text-[2.375rem] leading-[1.12] font-bold tracking-[-0.02em] md:text-[clamp(3rem,6vw,4.5rem)] md:leading-[1.08]">
+      <span class="text-fg">{t('hero.hello')}</span>
+      <span class="text-muted">{t('hero.tagline')}</span><span
+        class="cur ml-[.15em] inline-block h-[.9em] w-[.52em] bg-accent align-[-.08em]"
+        aria-hidden="true"></span>
+    </h1>
+    <p class="mt-6 max-w-[56ch] text-[1.0625rem] leading-relaxed text-fg-2 md:mt-8 md:text-[1.1875rem]">{t('hero.lead')}</p>
+    <div class="mt-7 flex flex-col gap-2.5 md:mt-9 md:flex-row md:flex-wrap md:gap-3">
+      <a href="#contacto" class="btn-primary">{t('hero.ctaContact')}</a>
+      <a href="#proyectos" class="btn-ghost">{t('hero.ctaProjects')}</a>
+    </div>
+    <dl class="mt-8 flex flex-col gap-1.5 text-[0.9375rem] text-fg-2 md:mt-10">
+      <dt class="font-mono text-xs tracking-[.08em] text-muted uppercase">{t('hero.now')}</dt>
+      <dd class="flex items-center gap-2">
+        <span class="size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true"></span>{t('hero.nowWork')}
+      </dd>
+      <dd class="flex items-center gap-2">
+        <span class="size-1.5 shrink-0 rounded-full bg-violet" aria-hidden="true"></span>{t('hero.nowMentor')}
+      </dd>
+    </dl>
+  </div>
+  <Particles />
+</section>

@@ -1,0 +1,43 @@
+{
+  "name": "portfolio",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check && biome check .",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "og": "node scripts/og.mjs",
+    "deploy": "astro build && wrangler deploy",
+    "generate-types": "wrangler types"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.3.3",
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource-variable/ibm-plex-sans": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.3.5",
+    "tailwindcss": "^4.3.3",
+    "wrangler": "^4.147.0"
+  },
+  "allowScripts": {
+    "esbuild": true
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@axe-core/playwright": "^4.13.0",
+    "@biomejs/biome": "^2.5.15",
+    "@playwright/test": "^1.63.0",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.3"
+  }
+}

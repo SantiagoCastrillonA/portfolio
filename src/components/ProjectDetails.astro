@@ -1,0 +1,61 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { getLang, useTranslations } from '../i18n/utils';
+import ProjectLinks from './ProjectLinks.astro';
+
+/**
+ * Text side of a project card, ordered for a non-technical reader:
+ * who it was for → what it is → what it achieved → (small) how it was built.
+ */
+interface Props {
+  project: CollectionEntry<'projects'>['data'];
+  large?: boolean;
+}
+
+const { project, large = false } = Astro.props;
+const t = useTranslations(getLang(Astro.currentLocale));
+const live = project.status === 'live';
+---
+
+<div class="flex grow flex-col gap-3">
+  <div class="flex flex-wrap items-center justify-between gap-2 text-[0.8125rem]">
+    <span class="text-muted">
+      {t('projects.for')}:{' '}
+      <span class:list={['font-medium', project.kind === 'client' ? 'text-violet' : 'text-yellow']}>{project.client}</span>
+    </span>
+    <span
+      class:list={[
+        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs',
+        live ? 'border-accent/50 text-accent' : 'border-yellow/50 text-yellow',
+      ]}
+    >
+      <span class:list={['size-1.5 rounded-full', live ? 'bg-accent' : 'bg-yellow']} aria-hidden="true"></span>
+      {t(live ? 'projects.live' : 'projects.wip')}
+    </span>
+  </div>
+
+  <h3 class:list={['font-semibold', large ? 'text-2xl leading-tight tracking-[-0.01em] md:text-[1.75rem]' : 'text-xl leading-snug']}>
+    {project.title}
+  </h3>
+  <p class:list={['text-fg-2', !large && 'text-[0.9375rem]']}>{project.summary}</p>
+
+  <ul class="flex flex-col gap-1.5 text-[0.9375rem] text-fg-2">
+    {
+      project.highlights.map((item) => (
+        <li class="flex gap-2">
+          <svg class="mt-1 size-4 shrink-0 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12.5l4.5 4.5L19 7.5"></path>
+          </svg>
+          {item}
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="mt-auto flex flex-col gap-1 pt-2">
+    <p class="text-[0.8125rem] text-muted">
+      {t('projects.builtWith')}: <span class="font-mono text-fg-2">{project.stack.join(' · ')}</span>
+    </p>
+    <ProjectLinks demoUrl={project.demoUrl} repoUrl={project.repoUrl} />
+  </div>
+</div>

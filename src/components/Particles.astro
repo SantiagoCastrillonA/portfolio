@@ -1,0 +1,186 @@
+---
+import { buildMotion, buildParticles, PARTICLE_BOX, type ParticleColor } from '../lib/particles';
+
+// Layout and motion are computed at build time; the browser only runs CSS
+// animations plus a tiny pointer-parallax script.
+const particles = buildParticles();
+const motion = buildMotion(particles.length);
+
+// Each color is a parallax layer; depth sets how far it follows the pointer.
+const layers: Array<{ color: ParticleColor; stroke: string; depth: number }> = [
+  { color: 'fg', stroke: 'stroke-fg', depth: 0.35 },
+  { color: 'yellow', stroke: 'stroke-yellow', depth: 0.6 },
+  { color: 'blue', stroke: 'stroke-blue', depth: 0.8 },
+  { color: 'accent', stroke: 'stroke-accent', depth: 1 },
+  { color: 'violet', stroke: 'stroke-violet', depth: 1.4 },
+];
+
+const vars = (i: number) => {
+  const m = motion[i];
+  return [
+    `--fx:${m.fromX}px`,
+    `--fy:${m.fromY}px`,
+    `--ad:${m.assembleDelay}ms`,
+    `--dx:${m.driftX}px`,
+    `--dy:${m.driftY}px`,
+    `--sp:${m.spin}deg`,
+    `--dd:${m.driftDuration}ms`,
+    `--dl:${m.driftDelay}ms`,
+  ].join(';');
+};
+---
+
+<div
+  aria-hidden="true"
+  class="particles relative mx-auto aspect-[520/440] w-full max-w-[324px] md:max-w-[520px] md:flex-[1_1_420px]"
+  data-particles
+>
+  <svg viewBox={`0 0 ${PARTICLE_BOX.width} ${PARTICLE_BOX.height}`} class="size-full overflow-visible" fill="none" stroke-width="1.3">
+    <defs>
+      <path id="tri" d="M5 1.2L9 8.8H1Z"></path>
+    </defs>
+    {
+      layers.map(({ color, stroke, depth }) => (
+        <g class:list={['layer', stroke]} data-depth={depth}>
+          {particles.map(
+            (p, i) =>
+              p.color === color && (
+                <g transform={`translate(${p.x} ${p.y})`}>
+                  <g class="assemble" style={vars(i)}>
+                    <g class="drift">
+                      <use
+                        href="#tri"
+                        opacity={p.opacity}
+                        transform={`rotate(${p.rotate} ${p.size / 2} ${p.size / 2}) scale(${p.size / 10})`}
+                      />
+                    </g>
+                  </g>
+                </g>
+              ),
+          )}
+        </g>
+      ))
+    }
+  </svg>
+</div>
+
+<style>
+  .particles {
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent);
+    animation: glow 6s ease-in-out infinite alternate;
+  }
+
+  /* On load each triangle flies in from a scattered point and the glyph assembles. */
+  .assemble {
+    animation: assemble 1.6s cubic-bezier(0.16, 1, 0.3, 1) var(--ad) both;
+  }
+
+  /* Then it floats and turns forever, each one on its own phase. */
+  .drift {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: drift var(--dd) ease-in-out var(--dl) infinite alternate;
+  }
+
+  .particles[data-paused] :is(.drift, .assemble),
+  .particles[data-paused] {
+    animation-play-state: paused;
+  }
+
+  @keyframes assemble {
+    from {
+      transform: translate(var(--fx), var(--fy));
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  @keyframes drift {
+    from {
+      transform: translate(0, 0) rotate(0deg);
+    }
+    to {
+      transform: translate(var(--dx), var(--dy)) rotate(var(--sp));
+    }
+  }
+
+  @keyframes glow {
+    from {
+      opacity: 0.85;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .particles,
+    .assemble,
+    .drift {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { Spring } from '../lib/spring';
+
+  const cloud = document.querySelector<HTMLElement>('[data-particles]');
+  const hero = cloud?.closest('section');
+
+  if (cloud && hero) {
+    // Stop the float loop while the hero is off-screen.
+    new IntersectionObserver(([entry]) => cloud.toggleAttribute('data-paused', !entry.isIntersecting)).observe(cloud);
+
+    // Independent X/Y springs, critically damped: the cloud follows the pointer
+    // without overshoot and can be redirected mid-motion with no velocity jump.
+    const springX = new Spring(0, { dampingRatio: 1, response: 0.6 });
+    const springY = new Spring(0, { dampingRatio: 1, response: 0.6 });
+    const canParallax = matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)');
+    let frame = 0;
+    let last = 0;
+
+    // Write transforms straight onto the 5 layers. Setting an inherited CSS variable on the
+    // container instead would restyle all ~370 triangles on every frame.
+    const layers = [...cloud.querySelectorAll<SVGGElement>('.layer')].map((el) => ({
+      el,
+      depth: Number(el.dataset.depth) * 14,
+    }));
+
+    const tick = (now: number) => {
+      // rAF timestamps can trail performance.now() by a frame: never step backwards.
+      const dt = Math.min(Math.max(now - last, 0) / 1000, 0.1);
+      last = now;
+      const settledX = springX.step(dt);
+      const settledY = springY.step(dt);
+      for (const { el, depth } of layers) {
+        el.style.transform = `translate(${(springX.value * depth).toFixed(2)}px, ${(springY.value * depth).toFixed(2)}px)`;
+      }
+      frame = settledX && settledY ? 0 : requestAnimationFrame(tick);
+    };
+
+    const retarget = (x: number, y: number) => {
+      springX.target = x;
+      springY.target = y;
+      if (!frame) {
+        last = performance.now();
+        frame = requestAnimationFrame(tick);
+      }
+    };
+
+    const clamp = (n: number) => Math.max(-1, Math.min(1, n));
+
+    hero.addEventListener('pointermove', (event) => {
+      if (!canParallax.matches) return;
+      const rect = cloud.getBoundingClientRect();
+      retarget(
+        clamp((event.clientX - (rect.left + rect.width / 2)) / (window.innerWidth / 2)),
+        clamp((event.clientY - (rect.top + rect.height / 2)) / (window.innerHeight / 2)),
+      );
+    });
+    hero.addEventListener('pointerleave', () => retarget(0, 0));
+  }
+</script>

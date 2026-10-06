@@ -1,0 +1,18 @@
+---
+const rows = [
+  { table: 'necesidades ........', status: 'DONE' },
+  { table: 'puntos_acopio ......', status: 'DONE' },
+  { table: 'voluntarios ........', status: 'WIP' },
+];
+---
+
+<div class="border-b border-line bg-bg px-5 py-[18px] font-mono text-[0.78125rem] leading-[1.7] text-fg-2" aria-hidden="true">
+  <span class="block"><span class="text-accent">$</span> php artisan migrate</span>
+  {
+    rows.map((row) => (
+      <span class="block">
+        <span class="whitespace-pre text-muted">{`  ${row.table} `}</span><span class={row.status === 'DONE' ? 'text-accent' : 'text-yellow'}>{row.status}</span>
+      </span>
+    ))
+  }
+</div>

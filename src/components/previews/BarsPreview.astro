@@ -1,0 +1,29 @@
+---
+import { getLang } from '../../i18n/utils';
+
+const labels = {
+  es: ['liderazgo', 'equipo', 'resultados'],
+  en: ['leadership', 'teamwork', 'results'],
+}[getLang(Astro.currentLocale)];
+const bars = [
+  { width: 'w-[82%]', color: 'bg-accent' },
+  { width: 'w-[68%]', color: 'bg-blue' },
+  { width: 'w-[91%]', color: 'bg-yellow' },
+];
+---
+
+<div
+  class="grid grid-cols-[110px_minmax(0,1fr)] items-center gap-x-3 gap-y-2 border-b border-line bg-bg px-5 py-[18px] font-mono text-xs text-fg-2"
+  aria-hidden="true"
+>
+  {
+    bars.map((bar, i) => (
+      <>
+        <span>{labels[i]}</span>
+        <div class="h-1.5 rounded-[3px] bg-line">
+          <div class:list={['h-1.5 rounded-[3px]', bar.width, bar.color]} />
+        </div>
+      </>
+    ))
+  }
+</div>

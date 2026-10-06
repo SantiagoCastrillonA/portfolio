@@ -1,0 +1,202 @@
+---
+import { profile } from '../data/profile';
+import { getLang, useTranslations } from '../i18n/utils';
+import TerminalWindow from './TerminalWindow.astro';
+
+const lang = getLang(Astro.currentLocale);
+const t = useTranslations(lang);
+
+// Cloudflare's always-pass test key is used when no real key is configured.
+const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '1x00000000000000000000AA';
+
+const channels = [
+  { label: t('contact.mail'), href: `mailto:${profile.email}`, text: profile.email },
+  { label: 'LinkedIn', href: profile.linkedin.url, text: profile.linkedin.handle },
+  { label: 'GitHub', href: profile.github.url, text: profile.github.handle },
+];
+
+const messages = {
+  submit: t('contact.submit'),
+  sending: t('contact.sending'),
+  ok: t('contact.ok'),
+  error: t('contact.error'),
+  invalid: t('contact.invalid'),
+  limited: t('contact.limited'),
+  captcha: t('contact.captcha'),
+};
+
+const label = 'text-[0.9375rem] font-medium text-fg';
+---
+
+<section id="contacto" class="pt-16 md:pt-24" aria-labelledby="contacto-title">
+  <div class="flex flex-wrap gap-10">
+    <div class="flex min-w-0 flex-[1_1_360px] flex-col gap-4">
+      <p class="font-mono text-[0.8125rem] font-medium tracking-[.08em] text-accent uppercase">{t('contact.eyebrow')}</p>
+      <h2 id="contacto-title" class="section-title">
+        {t('contact.title')}<span class="text-muted">{t('contact.titleMuted')}</span>
+      </h2>
+      <p class="max-w-[48ch] text-[1.0625rem] text-fg-2">{t('contact.lead')}</p>
+      <p class="mt-4 text-[0.8125rem] text-muted">{t('contact.channels')}</p>
+      <ul class="flex flex-col text-[0.9375rem]">
+        {
+          channels.map((c) => (
+            <li>
+              <a
+                href={c.href}
+                class="flex min-h-11 items-center gap-2.5 [overflow-wrap:anywhere] text-fg no-underline hover:text-accent"
+              >
+                <span class="w-20 shrink-0 font-mono text-[0.8125rem] text-accent">{c.label}</span>
+                {c.text}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <TerminalWindow
+      as="form"
+      traffic
+      title={t('contact.window')}
+      class="min-w-0 flex-[1_1_420px]"
+      method="post"
+      action="/api/contact"
+      novalidate
+      data-contact
+      data-messages={JSON.stringify(messages)}
+    >
+      <div class="flex flex-col gap-4 p-5 md:p-[22px]">
+        <input type="hidden" name="lang" value={lang} />
+        <div class="hidden" aria-hidden="true">
+          <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label for="name" class={label}>{t('contact.name')}</label>
+          <input id="name" name="name" type="text" required minlength="2" maxlength="120" autocomplete="name" placeholder={t('contact.namePh')} class="field min-h-[46px] aria-invalid:border-red" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label for="email" class={label}>{t('contact.email')}</label>
+          <input id="email" name="email" type="email" required maxlength="200" autocomplete="email" placeholder={t('contact.emailPh')} class="field min-h-[46px] aria-invalid:border-red" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label for="message" class={label}>{t('contact.message')}</label>
+          <textarea id="message" name="message" rows="4" required minlength="10" maxlength="5000" placeholder={t('contact.messagePh')} class="field resize-y py-3 aria-invalid:border-red"></textarea>
+        </div>
+
+        <div class="cf-turnstile min-h-[65px]" data-sitekey={turnstileSiteKey} data-theme="dark" data-language={lang}></div>
+
+        <button type="submit" class="btn-primary min-h-12 cursor-pointer border-0 disabled:cursor-wait disabled:opacity-70">
+          <span class="inline-block" data-label>{t('contact.submit')}</span>
+        </button>
+        <p class="min-h-6 text-[0.9375rem] data-[state=error]:text-red data-[state=ok]:text-accent" role="status" aria-live="polite" data-status></p>
+        <noscript><p class="text-[0.9375rem] text-muted">{t('contact.error')}</p></noscript>
+      </div>
+    </TerminalWindow>
+  </div>
+</section>
+
+<script>
+  import type { ContactResult } from '../lib/contact';
+
+  const form = document.querySelector<HTMLFormElement>('[data-contact]');
+
+  if (form) {
+    const status = form.querySelector<HTMLElement>('[data-status]')!;
+    const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    const messages = JSON.parse(form.dataset.messages ?? '{}') as Record<string, string>;
+    const fields = ['name', 'email', 'message'] as const;
+
+    const label = submit.querySelector<HTMLElement>('[data-label]')!;
+    const ease = 'cubic-bezier(0.23, 1, 0.32, 1)';
+    const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // New text eases in instead of popping. A little blur makes the swap read as one
+    // element changing rather than two overlapping. Reduced motion keeps only the fade.
+    const swapText = (el: HTMLElement, text: string) => {
+      if (el.textContent === text) return;
+      el.textContent = text;
+      el.animate(
+        reduced()
+          ? [{ opacity: 0 }, { opacity: 1 }]
+          : [
+              { opacity: 0, transform: 'translateY(4px)', filter: 'blur(2px)' },
+              { opacity: 1, transform: 'none', filter: 'blur(0)' },
+            ],
+        { duration: 200, easing: ease },
+      );
+    };
+
+    const show = (state: 'ok' | 'error' | 'pending', text: string) => {
+      status.dataset.state = state;
+      swapText(status, text);
+    };
+
+    // Load Turnstile only when the form gets close to the viewport.
+    const loadTurnstile = new IntersectionObserver(
+      (entries, observer) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        observer.disconnect();
+        const script = document.createElement('script');
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+        script.async = true;
+        document.head.appendChild(script);
+      },
+      { rootMargin: '400px' },
+    );
+    loadTurnstile.observe(form);
+
+    // Inline validation: flag a field when the reader leaves it, clear it as soon as it's fixed.
+    for (const name of fields) {
+      const field = form.elements.namedItem(name) as HTMLInputElement;
+      field.addEventListener('blur', () => {
+        if (field.value.trim()) field.setAttribute('aria-invalid', String(!field.checkValidity()));
+      });
+      field.addEventListener('input', () => {
+        if (field.getAttribute('aria-invalid') === 'true' && field.checkValidity()) {
+          field.setAttribute('aria-invalid', 'false');
+        }
+      });
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const invalid = fields.filter((name) => !(form.elements.namedItem(name) as HTMLInputElement).checkValidity());
+      for (const name of fields) {
+        (form.elements.namedItem(name) as HTMLElement).setAttribute('aria-invalid', String(invalid.includes(name)));
+      }
+      if (invalid.length) {
+        show('error', messages.invalid);
+        (form.elements.namedItem(invalid[0]) as HTMLElement).focus();
+        return;
+      }
+
+      submit.disabled = true;
+      swapText(label, messages.sending);
+      status.textContent = '';
+      try {
+        const res = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+        const result = (await res.json()) as ContactResult;
+        if (result.ok) {
+          form.reset();
+          show('ok', messages.ok);
+        } else {
+          if (result.code === 'invalid') {
+            for (const name of result.fields) {
+              form.querySelector(`[name="${name}"]`)?.setAttribute('aria-invalid', 'true');
+            }
+          }
+          show('error', messages[result.code] ?? messages.error);
+        }
+      } catch {
+        show('error', messages.error);
+      } finally {
+        submit.disabled = false;
+        swapText(label, messages.submit);
+        // A Turnstile token is single-use; get a fresh one for the next attempt.
+        (window as { turnstile?: { reset: () => void } }).turnstile?.reset();
+      }
+    });
+  }
+</script>

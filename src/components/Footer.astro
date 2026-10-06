@@ -1,0 +1,13 @@
+---
+import { profile } from '../data/profile';
+import { getLang, useTranslations } from '../i18n/utils';
+
+const t = useTranslations(getLang(Astro.currentLocale));
+---
+
+<footer
+  class="mt-14 flex flex-wrap justify-between gap-x-7 gap-y-2.5 border-t border-line pt-[22px] font-mono text-xs text-muted md:mt-20 md:text-[0.8125rem]"
+>
+  <span>© {new Date().getFullYear()} {profile.name} · {t('footer.location')}</span>
+  <span>{t('footer.exit')} <span class="text-accent">0</span></span>
+</footer>

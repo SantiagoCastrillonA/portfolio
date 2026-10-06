@@ -1,0 +1,27 @@
+---
+// Shared by every locale route; the language comes from Astro.currentLocale.
+// Order follows a visitor's questions: who is this → what can this person do for me →
+// proof → background → how to get in touch.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Contact from './Contact.astro';
+import Experience from './Experience.astro';
+import Footer from './Footer.astro';
+import Hero from './Hero.astro';
+import Nav from './Nav.astro';
+import Projects from './Projects.astro';
+import Services from './Services.astro';
+import Tools from './Tools.astro';
+---
+
+<BaseLayout>
+  <Nav />
+  <main id="main" class="mx-auto max-w-[1200px] px-4 pb-12 md:px-7 md:pb-20">
+    <Hero />
+    <Services />
+    <Projects />
+    <Experience />
+    <Tools />
+    <Contact />
+    <Footer />
+  </main>
+</BaseLayout>
