@@ -6,8 +6,10 @@ import TerminalWindow from './TerminalWindow.astro';
 const lang = getLang(Astro.currentLocale);
 const t = useTranslations(lang);
 
-// Cloudflare's always-pass test key is used when no real key is configured.
-const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '1x00000000000000000000AA';
+// Turnstile site keys are public. Production uses the real widget; dev uses Cloudflare's
+// always-pass test key. PUBLIC_TURNSTILE_SITE_KEY overrides both (tests set it).
+const turnstileSiteKey =
+  import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? (import.meta.env.DEV ? '1x00000000000000000000AA' : '0x4AAAAAAFO4ygOetOSjeD4s');
 
 const channels = [
   { label: t('contact.mail'), href: `mailto:${profile.email}`, text: profile.email },

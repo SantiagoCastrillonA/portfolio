@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
 
 // Public URL of the site. Change it here (or via SITE_URL) when the custom domain is ready.
-const site = process.env.SITE_URL ?? 'https://portfolio.santiagocastrillon.workers.dev';
+const site = process.env.SITE_URL ?? 'https://portfolio.scastrillon.workers.dev';
 
 // https://astro.build/config
 export default defineConfig({

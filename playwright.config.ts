@@ -24,5 +24,7 @@ export default defineConfig({
         url: `http://localhost:${PORT}`,
         timeout: 180_000,
         reuseExistingServer: !process.env.CI,
+        // Deterministic captcha in tests: Cloudflare's always-pass test key.
+        env: { PUBLIC_TURNSTILE_SITE_KEY: '1x00000000000000000000AA' },
       },
 });

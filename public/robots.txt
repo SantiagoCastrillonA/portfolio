@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://portfolio.santiagocastrillon.workers.dev/sitemap-index.xml
+Sitemap: https://portfolio.scastrillon.workers.dev/sitemap-index.xml

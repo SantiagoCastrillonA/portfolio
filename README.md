@@ -4,7 +4,7 @@ Portafolio de servicios de **Santiago Castrillón Arbeláez**, desarrollador ful
 
 **Regla de contenido:** quien lo visita casi nunca es desarrollador. Los textos explican qué es cada cosa y para qué sirve en palabras simples; la estética de terminal es decoración, no el mensaje.
 
-- **Producción:** https://portfolio.santiagocastrillon.workers.dev (provisional, hasta tener dominio propio)
+- **Producción:** https://portfolio.scastrillon.workers.dev (provisional, hasta tener dominio propio)
 - **Diseño base:** mockup "Portfolio Santiago Castrillón" (escritorio 1280 px y móvil 390 px)
 - **Contacto:** santiago.castrillon.ar@gmail.com · [LinkedIn](https://www.linkedin.com/in/santiago-castrillón-arbelaez-0b0906430) · [GitHub](https://github.com/SantiagoCastrillonA)
 
@@ -93,11 +93,10 @@ tests/e2e/            Playwright + axe
 ## Despliegue (Cloudflare)
 
 1. Crear cuenta en Cloudflare y en Resend.
-2. En Cloudflare → Turnstile, crear un widget para el dominio `*.workers.dev` (y luego el dominio propio).
+2. Turnstile: el widget `portfolio` ya existe (dominios `portfolio.scastrillon.workers.dev` y `localhost`). Su Site key pública está en `src/components/Contact.astro`.
 3. En Cloudflare → Workers → *Create* → *Import a repository*, conectar este repo:
    - Build command: `npm run build`
    - Deploy command: `npx wrangler deploy`
-   - Variable de build: `PUBLIC_TURNSTILE_SITE_KEY=<site key>`
 4. Secretos del Worker:
    ```bash
    npx wrangler secret put TURNSTILE_SECRET_KEY
